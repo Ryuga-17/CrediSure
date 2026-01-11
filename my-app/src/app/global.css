@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1A1F36; /* Midnight Blue (Luxury, Security) */
+  --color-golden: #D4AF37; /* Gold (Prestige, High Value) */
+  --color-accent: #2A9D8F; /* Teal (Growth & Stability) */
+  --color-background: black; /* Charcoal (Sleek & Modern) */
+  --color-text: #E5E5E5; /* Light Gray (Readable on Dark) */
+  --color-muted-gold: #B9972E;
+}
+
+/* *{
+  overflow-x: hidden;
+} */
+@keyframes marquee {
+    from { transform: translateX(100%); }
+    to { transform: translateX(-100%); }
+  }
+  
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .animate-marquee {
+    animation: marquee 20s linear infinite;
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 1s ease-out forwards;
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    .animate-marquee {
+      animation: none;
+      text-indent: -9999px;
+    }
+    
+    .animate-fade-in {
+      animation: none;
+    }
+  }
+
