@@ -48,6 +48,7 @@ const TestimonialSlider = () => {
                 clearInterval(timerRef.current);
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isPaused]);
 
     const nextSlide = () => {
@@ -100,7 +101,7 @@ const TestimonialSlider = () => {
                                     <div className="h-1 w-16 bg-[var(--color-golden)] rounded-full mb-4"></div>
 
                                     <blockquote className="text-gray-800 text-lg md:text-xl mb-6 italic font-light leading-relaxed font-serif px-4">
-                                        "{testimonials[currentIndex].content}"
+                                        &ldquo;{testimonials[currentIndex].content}&rdquo;
                                     </blockquote>
                                 </div>
 

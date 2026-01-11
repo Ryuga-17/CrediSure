@@ -32,13 +32,7 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login state
-
-  const handleLogin = () => setIsLoggedIn(true)
-  const handleLogout = () => {
-    setIsLoggedIn(false); // Simulate logout
-    // You can also clear cookies, localStorage, or call an API to log out
-  };
+  const [isLoggedIn] = useState(false); // Track login state
 
   return (
     <nav

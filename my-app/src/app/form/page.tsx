@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from "next/navigation";
 import api from '@/lib/api';
 
-interface FormData {
+interface LoanFormData {
   name: string;
   age: string;
   income: string;
@@ -41,7 +41,7 @@ const FinancialForm = () => {
     'Others'
   ];
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -101,14 +101,16 @@ const FinancialForm = () => {
 
       // Redirect to output page
       router.push('/output');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Form submission error:', err);
-      setError(
-        err.response?.data?.error || 
-        err.response?.data?.details || 
-        err.message || 
-        'Failed to submit application. Please try again.'
-      );
+      let errorMessage = 'Failed to submit application. Please try again.';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const response = (err as { response?: { data?: { error?: string; details?: string } } }).response;
+        errorMessage = response?.data?.error || response?.data?.details || errorMessage;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
