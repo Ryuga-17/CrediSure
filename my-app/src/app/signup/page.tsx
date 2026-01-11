@@ -81,13 +81,15 @@ export default function SignupPage() {
         alert('Registration successful! Please login.');
       }
     } 
-    catch (err) {
-      setError(
-        err.response?.data?.error || 
-        err.response?.data?.message || 
-        err.message ||
-        'An error occurred. Please try again.'
-      );
+    catch (err: unknown) {
+      let errorMessage = 'An error occurred. Please try again.';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const response = (err as { response?: { data?: { error?: string; message?: string } } }).response;
+        errorMessage = response?.data?.error || response?.data?.message || errorMessage;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
