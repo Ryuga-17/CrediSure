@@ -26,7 +26,7 @@ const testimonials = [
 const TestimonialSlider = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
-    const timerRef = useRef(null);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     const resetTimer = () => {
         if (timerRef.current) {
