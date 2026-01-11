@@ -65,7 +65,7 @@ const TestimonialSlider = () => {
         resetTimer();
     };
 
-    const goToSlide = (slideIndex) => {
+    const goToSlide = (slideIndex: number) => {
         setCurrentIndex(slideIndex);
         resetTimer();
     };
