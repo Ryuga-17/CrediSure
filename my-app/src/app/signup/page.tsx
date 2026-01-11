@@ -227,7 +227,7 @@ export default function SignupPage() {
         <div className="flex items-center justify-center mb-6">
           <Cloud className="text-[var(--color-golden)] w-12 h-12 mr-3 animate-bounce" />
           <h2 className="text-4xl font-bold text-[var(--color-golden)] tracking-tight">
-            NuviX
+            CrediSure
           </h2>
         </div>
 

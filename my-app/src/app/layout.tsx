@@ -5,7 +5,7 @@ import { AuthProvider } from '@/app/context/AuthContext';
 import Navbar from '@/components/Navbar';
 
 export const metadata = {
-  title: 'NuviX',
+  title: 'CrediSure',
   description: 'Your personal credit risk analyzer',
 };
 

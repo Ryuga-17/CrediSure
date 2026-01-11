@@ -9,7 +9,7 @@ const Footer = () => {
             <div className="flex items-center mb-4">
             <Diamond className="h-8 w-8 text-[var(--color-golden)] fill-current"/>
             <div className="font-bold text-2xl mx-2 text-white transition-all duration-300 group-hover:[var(--color-accent)]">
-            Nuvi<span className="text-[var(--color-golden)]">X</span>
+            Credi<span className="text-[var(--color-golden)]">Sure</span>
             </div>
             </div>
             <p className="text-[var(--color-text)]">
@@ -30,7 +30,7 @@ const Footer = () => {
             <ul className="space-y-2">
               <li className="flex items-center">
                 <Mail className="h-5 w-5 mr-2 text-[var(--color-golden)]" />
-                <span className="text-gray-400">nuvix@ac.in</span>
+                <span className="text-gray-400">credisure@ac.in</span>
               </li>
               <li className="flex items-center">
                 <Phone className="h-5 w-5 mr-2 text-[var(--color-golden)]" />
@@ -53,7 +53,7 @@ const Footer = () => {
         </div>
       </div>
         <div className="text-center mt-8 mb-4">
-          <p className="text-gray-400 text-center">© 2025 NuviX: Credit Risk Analyzer. All rights reserved.</p>
+          <p className="text-gray-400 text-center">© 2025 CrediSure: Credit Risk Analyzer. All rights reserved.</p>
         </div>
     </footer>
   );

@@ -31,7 +31,7 @@ export default function ChatBot() {
       {
         id: "welcome",
         content:
-          "Hello! I'm Nuvix, your finance assistant. Ask me anything about financial concepts or investment strategies.",
+          "Hello! I'm CrediSure, your finance assistant. Ask me anything about financial concepts or investment strategies.",
         isBot: true,
       },
     ])
@@ -230,7 +230,7 @@ export default function ChatBot() {
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              Nuvix
+              CrediSure
             </motion.h1>
             <motion.p
               className="text-slate-100 opacity-90 text-sm"
@@ -373,7 +373,7 @@ export default function ChatBot() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.5 }}
         >
-          Nuvix helps you understand complex financial concepts with ease
+          CrediSure helps you understand complex financial concepts with ease
         </motion.div>
       </motion.div>
     </div>

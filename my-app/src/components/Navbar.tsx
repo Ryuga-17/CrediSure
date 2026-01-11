@@ -91,7 +91,7 @@ export default function Navbar() {
                 </svg>
               </div>
               <div className="font-bold text-2xl text-white transition-all duration-300 group-hover:[var(--color-accent)] overflow-hidden">
-                Nuvi<span className="text-[var(--color-golden)] overflow-hidden">X</span>
+                Credi<span className="text-[var(--color-golden)] overflow-hidden">Sure</span>
               </div>
             </Link>
           </div>
