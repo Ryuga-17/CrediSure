@@ -52,9 +52,9 @@ const FinancialForm = () => {
     setError('');
     
     // Validate no negative values
-    const numericalFields = ['age', 'income', 'existingDebtPayments', 'loanAmount', 'loanRate', 'loanTerm'];
+    const numericalFields: Array<keyof typeof formData> = ['age', 'income', 'existingDebtPayments', 'loanAmount', 'loanRate', 'loanTerm'];
     const hasNegativeValues = numericalFields.some(field => {
-      const value = parseFloat(formData[field]);
+      const value = parseFloat(String(formData[field]));
       return value < 0;
     });
 
