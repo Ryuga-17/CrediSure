@@ -29,7 +29,11 @@ const FinancialForm = () => {
   ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target;
+    const target = e.target as HTMLInputElement | HTMLSelectElement;
+    const { name, value } = target;
+    const checked = 'checked' in target ? target.checked : false;
+    const type = 'type' in target ? target.type : '';
+    
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
