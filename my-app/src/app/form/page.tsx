@@ -4,19 +4,6 @@ import React, { useState } from 'react';
 import { useRouter } from "next/navigation";
 import api from '@/lib/api';
 
-interface LoanFormData {
-  name: string;
-  age: string;
-  income: string;
-  existingDebtPayments: string;
-  loanAmount: string;
-  loanRate: string;
-  loanTerm: string;
-  hasDependents: boolean;
-  hasMortgage: boolean;
-  loanPurpose: string;
-}
-
 const FinancialForm = () => {
   const initialFormState = {
     name: '',
