@@ -78,7 +78,7 @@ const FinancialForm = () => {
         name: formData.name,
         age: parseFloat(formData.age),
         income: parseFloat(formData.income),
-        existingDebtPayment: parseFloat(formData.existingDebtPayments || 0),
+        existingDebtPayment: parseFloat(formData.existingDebtPayments || '0'),
         loanAmount: parseFloat(formData.loanAmount),
         loanRate: parseFloat(formData.loanRate),
         loanTerm: parseFloat(formData.loanTerm),
