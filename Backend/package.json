@@ -1,7 +1,7 @@
 {
-  "name": "nuvix_backend",
+  "name": "credisure_backend",
   "version": "1.0.0",
-  "description": "a backend for nuvix ",
+  "description": "Backend for CrediSure",
   "main": "index.js",
   "scripts": {
     "dev": "node src/server.js",

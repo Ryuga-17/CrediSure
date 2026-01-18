@@ -1,0 +1,139 @@
+{
+  "version": "v1",
+  "generated_at": "2026-01-17",
+  "credit_score": {
+    "numerical_impute": {
+      "age": 40,
+      "income": 60000,
+      "loanAmount": 20000,
+      "loanRate": 10,
+      "existingDebtPayment": 500
+    },
+    "categorical_mapping": {
+      "loanPurpose": {
+        "Business": 0,
+        "Home": 1,
+        "Education": 2,
+        "Other": 3,
+        "Others": 3,
+        "Auto": 4,
+        "Automobile": 4
+      }
+    },
+    "normalize_features": [
+      "Income",
+      "LoanAmount",
+      "CreditScore",
+      "InterestRate",
+      "DTIRatio"
+    ]
+  },
+  "default_pd": {
+    "numerical_impute": {
+      "age": 40,
+      "income": 60000,
+      "loanAmount": 20000,
+      "loanRate": 10,
+      "loanTerm": 36,
+      "existingDebtPayment": 500,
+      "creditScore": 650
+    },
+    "categorical_mapping": {
+      "loanPurpose": {
+        "Business": 0,
+        "Home": 1,
+        "Education": 2,
+        "Other": 3,
+        "Others": 3,
+        "Auto": 4,
+        "Automobile": 4
+      }
+    },
+    "scaler": {
+      "mean": {
+        "Age": 40,
+        "Income": 60000,
+        "LoanAmount": 20000,
+        "CreditScore": 650,
+        "InterestRate": 10,
+        "LoanTerm": 36,
+        "DTIRatio": 20
+      },
+      "std": {
+        "Age": 12,
+        "Income": 30000,
+        "LoanAmount": 15000,
+        "CreditScore": 80,
+        "InterestRate": 5,
+        "LoanTerm": 24,
+        "DTIRatio": 10
+      }
+    },
+    "feature_order": [
+      "Age",
+      "Income",
+      "LoanAmount",
+      "CreditScore",
+      "InterestRate",
+      "LoanTerm",
+      "DTIRatio",
+      "LoanPurpose",
+      "HasMortgage",
+      "HasDependents"
+    ]
+  },
+  "background": {
+    "default_pd": {
+      "feature_order": [
+        "Age",
+        "Income",
+        "LoanAmount",
+        "CreditScore",
+        "InterestRate",
+        "LoanTerm",
+        "DTIRatio",
+        "LoanPurpose",
+        "HasMortgage",
+        "HasDependents"
+      ],
+      "samples": [
+        [
+          40,
+          60000,
+          20000,
+          650,
+          10,
+          36,
+          20,
+          1,
+          0,
+          0
+        ],
+        [
+          35,
+          45000,
+          15000,
+          620,
+          12,
+          24,
+          25,
+          2,
+          0,
+          1
+        ],
+        [
+          50,
+          80000,
+          30000,
+          700,
+          8,
+          48,
+          15,
+          0,
+          1,
+          0
+        ]
+      ]
+    }
+  }
+}

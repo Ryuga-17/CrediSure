@@ -3,10 +3,23 @@ const router = express.Router();
 const LoanApplication = require("../models/LoanApplication");
 const authMiddleware = require("../middlewares/auth");
 const mlService = require("../services/mlService");
+const monitoringService = require("../services/monitoringService");
+const { loanRequestSchema } = require("../schemas/loanSchemas");
+const { validationResult } = require("express-validator");
+
+const calculateDtiRatio = (income, existingDebtPayment) => {
+  if (!income || income <= 0) return 0;
+  return (existingDebtPayment / income) * 100;
+};
 
 // Submit a new loan application with ML predictions
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", authMiddleware, loanRequestSchema, async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const {
       name,
       age,
@@ -19,11 +32,6 @@ router.post("/", authMiddleware, async (req, res) => {
       hasMortgage,
       loanPurpose
     } = req.body;
-
-    // Validate required fields
-    if (!name || !age || !income || !loanAmount || !loanRate || !loanTerm || !loanPurpose) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
 
     // Get ML predictions
     let predictions = null;
@@ -61,10 +69,42 @@ router.post("/", authMiddleware, async (req, res) => {
       loanPurpose,
       creditScore: predictions?.creditScore,
       defaultStatus: predictions?.defaultStatus,
-      defaultProbability: predictions?.defaultProbability
+      defaultProbability: predictions?.defaultProbability,
+      riskBucket: predictions?.riskBucket,
+      explanationSummary: predictions?.explanationSummary,
+      preprocessingVersion: predictions?.preprocessingVersion,
+      modelVersions: predictions?.modelVersions
     });
 
     await loanApplication.save();
+
+    if (predictions) {
+      const dtiRatio = calculateDtiRatio(income, existingDebtPayment || 0);
+      await monitoringService.recordPrediction({
+        loanApplicationId: loanApplication._id,
+        userId: req.user.id,
+        features: {
+          age,
+          income,
+          loanAmount,
+          loanRate,
+          loanTerm,
+          existingDebtPayment: existingDebtPayment || 0,
+          dtiRatio,
+          loanPurpose,
+          hasMortgage: hasMortgage || false,
+          hasDependents: hasDependents || false,
+          creditScore: predictions.creditScore
+        },
+        probabilityOfDefault: predictions.defaultProbability,
+        creditScore: predictions.creditScore,
+        riskBucket: predictions.riskBucket,
+        explanationSummary: predictions.explanationSummary,
+        preprocessingVersion: predictions.preprocessingVersion,
+        modelVersions: predictions.modelVersions
+      });
+    }
+
     res.status(201).json(loanApplication);
   } catch (err) {
     console.error("Loan Application Error:", err);
@@ -103,8 +143,13 @@ router.get("/:id", authMiddleware, async (req, res) => {
 });
 
 // Get predictions for loan application data (without saving)
-router.post("/predict", authMiddleware, async (req, res) => {
+router.post("/predict", authMiddleware, loanRequestSchema, async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const {
       age,
       income,
@@ -116,11 +161,6 @@ router.post("/predict", authMiddleware, async (req, res) => {
       hasMortgage,
       loanPurpose
     } = req.body;
-
-    // Validate required fields
-    if (!age || !income || !loanAmount || !loanRate || !loanTerm || !loanPurpose) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
 
     // Get ML predictions
     const predictions = await mlService.predict({
@@ -139,7 +179,15 @@ router.post("/predict", authMiddleware, async (req, res) => {
       success: true,
       creditScore: predictions.creditScore,
       defaultStatus: predictions.defaultStatus,
-      defaultProbability: predictions.defaultProbability
+      defaultProbability: predictions.defaultProbability,
+      riskBucket: predictions.riskBucket,
+      explanationSummary: predictions.explanationSummary || [],
+      preprocessingVersion: predictions.preprocessingVersion,
+      modelVersions: predictions.modelVersions,
+      credit_score: predictions.creditScore,
+      probability_of_default: predictions.defaultProbability,
+      risk_bucket: predictions.riskBucket,
+      explanation_summary: predictions.explanationSummary || []
     });
   } catch (err) {
     console.error("Prediction Error:", err);

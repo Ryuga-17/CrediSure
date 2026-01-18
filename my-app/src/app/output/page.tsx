@@ -10,6 +10,8 @@ export default function RiskAssessment() {
     creditScore: number | null;
     defaultStatus: number | null;
     defaultProbability: number | null;
+    riskBucket?: string | null;
+    explanationSummary?: Array<{ feature: string; impact: number; direction: string }> | null;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,11 +30,19 @@ export default function RiskAssessment() {
       const loanApplication = JSON.parse(loanApplicationStr);
       
       // Check if predictions are available
-      if (loanApplication.creditScore !== undefined && loanApplication.defaultStatus !== undefined) {
+      const creditScore = loanApplication.creditScore ?? loanApplication.credit_score ?? null;
+      const defaultStatus = loanApplication.defaultStatus ?? loanApplication.default_status ?? null;
+      const defaultProbability = loanApplication.defaultProbability ?? loanApplication.probability_of_default ?? null;
+      const riskBucket = loanApplication.riskBucket ?? loanApplication.risk_bucket ?? null;
+      const explanationSummary = loanApplication.explanationSummary ?? loanApplication.explanation_summary ?? [];
+
+      if (creditScore !== null && defaultStatus !== null) {
         setRiskData({
-          creditScore: loanApplication.creditScore,
-          defaultStatus: loanApplication.defaultStatus,
-          defaultProbability: loanApplication.defaultProbability || null
+          creditScore,
+          defaultStatus,
+          defaultProbability: defaultProbability || null,
+          riskBucket,
+          explanationSummary
         });
       } else {
         setError('Prediction data not available. The ML models may not have processed the application yet.');
@@ -73,6 +83,14 @@ export default function RiskAssessment() {
     );
   }
 
+  const riskBucketColor = (bucket?: string | null) => {
+    if (!bucket) return 'bg-gray-100 text-gray-800';
+    if (bucket === 'Low Risk') return 'bg-green-100 text-green-800';
+    if (bucket === 'Medium Risk') return 'bg-yellow-100 text-yellow-800';
+    if (bucket === 'High Risk') return 'bg-red-100 text-red-800';
+    return 'bg-gray-100 text-gray-800';
+  };
+
   return (
     <div className="min-h-screen bg-[var(--color-text)] relative">
         {/* Financial icon patterns - subtle background elements */}
@@ -112,53 +130,63 @@ export default function RiskAssessment() {
             </div>
           </div>
 
-          {/* Default Status Card */}
-          <div className={`bg-white overflow-hidden shadow-lg rounded-xl border-t-4 transition-all duration-300 hover:shadow-xl transform hover:scale-[1.02] ${
-            riskData.defaultStatus === 0 ? 'border-green-500' : 'border-red-500'
-          }`}>
+          {/* Default Risk Card */}
+          <div className="bg-white overflow-hidden shadow-lg rounded-xl border-t-4 border-indigo-500 transition-all duration-300 hover:shadow-xl transform hover:scale-[1.02]">
             <div className="px-8 py-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6">Default Status</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">Default Risk</h3>
               <div className="flex flex-col items-center">
-                <div className={`text-6xl font-bold mb-4 w-40 h-40 rounded-full flex items-center justify-center ${
-                  riskData.defaultStatus === 0 
-                    ? 'text-green-600 bg-green-50' 
-                    : 'text-red-600 bg-red-50'
-                }`}>
-                  {riskData.defaultStatus}
+                <div className="text-5xl font-bold mb-4 w-40 h-40 rounded-full flex items-center justify-center text-indigo-600 bg-indigo-50">
+                  {riskData.defaultProbability !== null
+                    ? `${(riskData.defaultProbability * 100).toFixed(1)}%`
+                    : 'N/A'}
                 </div>
-                <span className={`px-6 py-2 text-base font-medium rounded-full ${
-                  riskData.defaultStatus === 0 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {riskData.defaultStatus === 0 ? 'Non-Default' : 'Default'}
+                <span className={`px-6 py-2 text-base font-medium rounded-full ${riskBucketColor(riskData.riskBucket)}`}>
+                  {riskData.riskBucket || 'Risk bucket unavailable'}
                 </span>
-                {riskData.defaultProbability !== null && (
-                  <div className="mt-4 text-sm text-gray-600">
-                    Probability: {(riskData.defaultProbability * 100).toFixed(2)}%
-                  </div>
-                )}
+                <div className="mt-4 text-sm text-gray-600">
+                  {riskData.defaultStatus === 0 ? 'Predicted Non-Default' : 'Predicted Default'}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Image Display Section */}
-        <div className="mt-10 bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200 transition-all duration-300 hover:shadow-xl">
-          <div className="px-8 py-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">Risk Explanation</h3>
-            <div className="relative h-80 w-full bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
-              <Image 
-                src="/explanable-image.jpg" // Use the imported image
-                alt="Risk explanation visualization"
-                layout="fill"
-                objectFit="contain"
-                quality={100}
-                className="p-4"
-              />
+        {/* Explainability Section */}
+        <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2">
+          <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200 transition-all duration-300 hover:shadow-xl">
+            <div className="px-8 py-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">Top Risk Drivers</h3>
+              <ul className="space-y-3">
+                {(riskData.explanationSummary || []).length === 0 && (
+                  <li className="text-sm text-gray-600">No explanation available for this prediction.</li>
+                )}
+                {(riskData.explanationSummary || []).map((item, idx) => (
+                  <li key={`${item.feature}-${idx}`} className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-gray-700">{item.feature}</span>
+                    <span className={`${item.direction === 'increases' ? 'text-red-600' : 'text-green-600'}`}>
+                      {item.direction === 'increases' ? '↑' : '↓'} {Math.abs(item.impact).toFixed(4)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div className="mt-4 text-sm text-gray-600 italic text-center">
-              <p>Visualization showing key factors contributing to the risk assessment.</p>
+          </div>
+          <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200 transition-all duration-300 hover:shadow-xl">
+            <div className="px-8 py-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">Risk Explanation</h3>
+              <div className="relative h-80 w-full bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+                <Image 
+                  src="/explanable-image.jpg"
+                  alt="Risk explanation visualization"
+                  layout="fill"
+                  objectFit="contain"
+                  quality={100}
+                  className="p-4"
+                />
+              </div>
+              <div className="mt-4 text-sm text-gray-600 italic text-center">
+                <p>Visualization showing key factors contributing to the risk assessment.</p>
+              </div>
             </div>
           </div>
         </div>

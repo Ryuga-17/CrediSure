@@ -21,6 +21,10 @@ const LoanApplicationSchema = new mongoose.Schema({
   creditScore: { type: Number },
   defaultStatus: { type: Number }, // 0 = Non-Default, 1 = Default
   defaultProbability: { type: Number },
+  riskBucket: { type: String },
+  explanationSummary: { type: Array, default: [] },
+  preprocessingVersion: { type: String },
+  modelVersions: { type: Object },
 }, { timestamps: true });
 
 module.exports = mongoose.model("LoanApplication", LoanApplicationSchema);
