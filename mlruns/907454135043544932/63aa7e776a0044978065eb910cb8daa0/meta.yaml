@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/viveksawant/Desktop/CreditSure/mlruns/907454135043544932/63aa7e776a0044978065eb910cb8daa0/artifacts
+end_time: 1776000695139
+entry_point_name: ''
+experiment_id: '907454135043544932'
+lifecycle_stage: active
+run_id: 63aa7e776a0044978065eb910cb8daa0
+run_name: gifted-shrike-63
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1776000695134
+status: 3
+tags: []
+user_id: viveksawant

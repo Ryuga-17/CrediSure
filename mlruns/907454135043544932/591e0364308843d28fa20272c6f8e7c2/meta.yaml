@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/viveksawant/Desktop/CreditSure/mlruns/907454135043544932/591e0364308843d28fa20272c6f8e7c2/artifacts
+end_time: 1776000695103
+entry_point_name: ''
+experiment_id: '907454135043544932'
+lifecycle_stage: active
+run_id: 591e0364308843d28fa20272c6f8e7c2
+run_name: clumsy-dolphin-3
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1776000695097
+status: 3
+tags: []
+user_id: viveksawant

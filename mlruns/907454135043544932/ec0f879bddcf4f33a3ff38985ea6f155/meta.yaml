@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/viveksawant/Desktop/CreditSure/mlruns/907454135043544932/ec0f879bddcf4f33a3ff38985ea6f155/artifacts
+end_time: 1776000695004
+entry_point_name: ''
+experiment_id: '907454135043544932'
+lifecycle_stage: active
+run_id: ec0f879bddcf4f33a3ff38985ea6f155
+run_name: spiffy-doe-805
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1776000695000
+status: 3
+tags: []
+user_id: viveksawant

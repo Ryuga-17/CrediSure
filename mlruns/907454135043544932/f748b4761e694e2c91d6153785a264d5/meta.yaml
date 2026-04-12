@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/viveksawant/Desktop/CreditSure/mlruns/907454135043544932/f748b4761e694e2c91d6153785a264d5/artifacts
+end_time: 1776000694920
+entry_point_name: ''
+experiment_id: '907454135043544932'
+lifecycle_stage: active
+run_id: f748b4761e694e2c91d6153785a264d5
+run_name: fun-ant-759
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1776000694915
+status: 3
+tags: []
+user_id: viveksawant

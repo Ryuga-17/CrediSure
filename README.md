@@ -9,15 +9,32 @@ Lenders need consistent, explainable decisions for credit risk. This system pred
 ## System Architecture
 
 ```mermaid
-graph LR
-  A[Frontend Loan Form] --> B[Backend API]
-  B --> C[Stateless ML Predictor Service]
-  C --> D[Credit Score Model]
-  C --> E[Default PD Model]
-  C --> F[SHAP Explainability]
-  B --> G[(MongoDB)]
-  B --> H[Monitoring Metrics]
-  G --> I[Frontend Results Page]
+graph TD
+  subgraph Data Management & Training
+    A[(MongoDB \n Production Data)] --> |Extract/Batch| B[DVC \n Data Versioning]
+    B --> V[Data Validation \n Great Expectations]
+    V --> C[Feature Engineering \n & Preprocessing]
+    C --> FS[(Lightweight \n Feature Store)]
+    FS --> D[Model Training \n LightGBM/PyTorch]
+    D --> E[Optuna \n Hyperparameter Tuning]
+    E --> F[MLflow \n Exp Tracking]
+  end
+
+  subgraph Registry & CI/CD
+    F --> G[MLflow Model Registry]
+    G --> |Automated Eval \n AUC impr v. > 1-2%| H{GitHub Actions \n CI/CD}
+    H --> |Build & Push| I[Docker Registry]
+  end
+
+  subgraph Production Deployment
+    I --> J[Production \n Inference Service]
+    I --> J2[Canary \n Inference Service]
+    K[Next.js Frontend] --> L[Node.js Express API]
+    L --> |Traffic Routing / REST| J & J2
+    J & J2 --> |JSON Structured \n Traceability Logs| M[Prometheus/Logging]
+    M --> N[Grafana \n Dashboards]
+    N -.-> |Drift & Perf Alerts| A
+  end
 ```
 
 ## Modeling Approach
@@ -38,12 +55,28 @@ graph LR
 - Top 5 drivers are stored with each prediction in MongoDB.
 - API returns a concise explanation summary for UI display.
 
+## MLOps Features
+
+This system utilizes a fully automated MLOps pipeline ensuring reproducibility and consistency:
+- **DVC (Data Version Control)**: Orchestrates data extraction, validation, and preprocessing pipelines, preventing Git bloat while enabling total reproducibility.
+- **Great Expectations**: Data validation layer enforcing schema, range, and type consistency before training.
+- **Lightweight Feature Store**: Parquet-based store centralizing feature definitions for training and online serving.
+- **MLflow & Optuna**: Automated bayesian hyperparameter tuning and model experiment tracking. Uses the MLflow Registry for managing staging and production models.
+
 ## Monitoring Strategy
 
-- Every prediction logs probability and key feature values.
-- Daily aggregates track feature distributions and PD stats.
-- Simple drift detection uses z-score checks against a baseline distribution.
-- Prediction logs retain preprocessing and model version metadata.
+- **Structured Traceability**: Every prediction logs `input_features`, `model_version`, and `output_prediction` in JSON format.
+- **Comprehensive Drift Detection**: 
+  - *Input Drift*: Tracked via Population Stability Index (PSI).
+  - *Prediction Drift*: Output distribution monitoring.
+  - *Performance Drift*: Continuous calculation of decay using delayed labels.
+- **Grafana & Prometheus**: Real-time alerting when thresholds are breached.
+
+## Safe Deployment (Canary Releases)
+
+- **CI/CD via GitHub Actions**: Linting, testing, and Docker container builds on merge.
+- **Automated Promotion**: Models promote from staging only if AUC improves by ≥ 1.5% without business logic degradation.
+- **Canary Routing**: Model is safely deployed to 5-10% of traffic. Upon stable inference, traffic seamlessly shifts to 100%.
 
 ## API Output (Core Fields)
 
@@ -65,40 +98,50 @@ graph LR
 ## Tech Stack
 
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
-- **Backend**: Node.js, Express, MongoDB
-- **ML Models**: LightGBM, PyTorch, SHAP
-- **Database**: MongoDB
+- **Backend API**: Node.js, Express, MongoDB
+- **Inference Service**: Python, FastAPI, MLflow Pyfunc
+- **MLOps Platform**: DVC, Great Expectations, MLflow, Optuna
+- **Monitoring**: Prometheus, Grafana
 
 ## Quick Start
 
 ### Prerequisites
 
 - Node.js 18+
-- Python 3.7+
+- Python 3.9+
 - MongoDB (Atlas or local)
+- Docker & Docker Compose (for MLOps & Monitoring Services)
 
 ### Installation
 
-1. **Backend Setup**
+1. **Spin up MLOps Services & Inference**
+   ```bash
+   # (Assuming docker-compose orchestrates mlflow, prometheus, grafana, and inference)
+   docker compose up -d
+   ```
+
+2. **Backend Setup**
    ```bash
    cd Backend
    npm install
-   pip install -r requirements.txt
+   npm run dev
    ```
 
-2. **Frontend Setup**
+3. **Frontend Setup**
    ```bash
    cd my-app
    npm install
+   npm run dev
    ```
 
-3. **Environment Variables**
+4. **Environment Variables**
 
    Create `Backend/.env`:
    ```env
    MONGO_URI=your-mongodb-connection-string
    JWT_SECRET=your-jwt-secret-key
    PORT=5000
+   INFERENCE_API_URL=http://localhost:8000
    ```
 
    Create `my-app/.env.local`:
@@ -106,37 +149,34 @@ graph LR
    NEXT_PUBLIC_API_URL=http://localhost:5000
    ```
 
-4. **Run**
-
-   Backend:
+5. **Run Training Pipeline (Optional)**
    ```bash
-   cd Backend
-   npm run dev
-   ```
-
-   Frontend:
-   ```bash
-   cd my-app
-   npm run dev
+   cd ml_pipeline
+   dvc repro
    ```
 
 ## Project Structure
 
-```
+```text
 CreditSure/
-├── Backend/          # Express API server
-├── my-app/           # Next.js frontend
-├── ml_artifacts/     # Versioned preprocessing artifacts
-├── *.pkl            # ML model files
-└── *.ipynb          # Model training notebooks
+├── Backend/                     # Node.js/Express API server
+├── my-app/                      # Next.js frontend
+├── ml_pipeline/                 # MLOps Pipeline Hub (DVC, Optuna, Training)
+│   ├── data/                    # Version-controlled data & Feature Store
+│   ├── src/                     # Python training & validation modules
+│   └── dvc.yaml                 # DVC pipeline stages
+├── ml_service/                  # Python FastAPI Inference Microservice
+│   ├── app.py                   # MLflow pyfunc model serving
+│   └── Dockerfile               
+├── monitoring/                  # Prometheus configs and Grafana Dashboards
+└── .github/workflows/           # CI/CD pipelines (mlops.yml)
 ```
 
 ## Future Improvements
 
-- Retrain models with a unified preprocessing pipeline artifact.
-- Add batch monitoring dashboards and alerting.
 - Introduce fairness and bias checks on protected attributes.
 - Add calibration and rejection-inference strategies.
+- Expand Great Expectations coverage across upstream database tables.
 
 ## License
 

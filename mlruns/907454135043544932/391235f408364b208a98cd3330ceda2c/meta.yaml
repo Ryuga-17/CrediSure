@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/viveksawant/Desktop/CreditSure/mlruns/907454135043544932/391235f408364b208a98cd3330ceda2c/artifacts
+end_time: 1776000695157
+entry_point_name: ''
+experiment_id: '907454135043544932'
+lifecycle_stage: active
+run_id: 391235f408364b208a98cd3330ceda2c
+run_name: adorable-fish-467
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1776000695151
+status: 3
+tags: []
+user_id: viveksawant

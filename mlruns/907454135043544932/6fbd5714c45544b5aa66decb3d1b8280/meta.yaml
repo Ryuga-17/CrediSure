@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/viveksawant/Desktop/CreditSure/mlruns/907454135043544932/6fbd5714c45544b5aa66decb3d1b8280/artifacts
+end_time: 1776000694935
+entry_point_name: ''
+experiment_id: '907454135043544932'
+lifecycle_stage: active
+run_id: 6fbd5714c45544b5aa66decb3d1b8280
+run_name: calm-horse-882
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1776000694931
+status: 3
+tags: []
+user_id: viveksawant

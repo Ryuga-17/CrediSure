@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/viveksawant/Desktop/CreditSure/mlruns/907454135043544932/8920be5f9480425d94941b568c99c3b8/artifacts
+end_time: 1776000694897
+entry_point_name: ''
+experiment_id: '907454135043544932'
+lifecycle_stage: active
+run_id: 8920be5f9480425d94941b568c99c3b8
+run_name: '1'
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1776000694889
+status: 3
+tags: []
+user_id: viveksawant
