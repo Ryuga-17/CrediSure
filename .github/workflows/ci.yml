@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: Backend/package-lock.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install backend Node dependencies
+        working-directory: Backend
+        run: npm ci
+
+      # Backend/package.json's test:py script runs against ../.venv/bin/python.
+      - name: Create Python virtualenv and install ML dependencies
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -r Backend/requirements.txt
+
+      - name: Run backend tests (node:test + pytest)
+        working-directory: Backend
+        run: npm test
+
+      # `npm audit fix` cleared the dependency tree to 0 known vulnerabilities;
+      # no continue-on-error, so this now actually gates on a genuinely new
+      # high/critical CVE landing via a future dependency bump, rather than
+      # being permanently informational (which couldn't distinguish "still
+      # just the old known issues" from "a fresh one just landed").
+      - name: Audit backend dependencies
+        working-directory: Backend
+        run: npm audit --audit-level=high
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: my-app/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: my-app
+        run: npm ci
+
+      - name: Type-check
+        working-directory: my-app
+        run: npx tsc --noEmit
+
+      - name: Lint
+        working-directory: my-app
+        run: npm run lint
+
+      - name: Run frontend tests (vitest)
+        working-directory: my-app
+        run: npm test
+
+      - name: Build
+        working-directory: my-app
+        run: npm run build
+
+      - name: Audit frontend dependencies
+        working-directory: my-app
+        run: npm audit --audit-level=high

@@ -55,3 +55,9 @@ ENV/
 # Logs
 logs/
 *.log
+
+# MLflow local experiment tracking data
+ml/mlruns/
+
+# Training data (large, not source; models/artifacts derived from it are what's tracked)
+ml/notebooks/*.csv

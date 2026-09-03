@@ -9,7 +9,8 @@ const StatsSchema = new mongoose.Schema({
 }, { _id: false });
 
 const MonitoringMetricSchema = new mongoose.Schema({
-  date: { type: String, required: true, index: true },
+  // The unique index is declared below; `index: true` here would duplicate it.
+  date: { type: String, required: true },
   prediction: { type: StatsSchema, default: () => ({}) },
   features: { type: Map, of: StatsSchema, default: {} },
   categorical: { type: Object, default: {} },

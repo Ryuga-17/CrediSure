@@ -1,0 +1,79 @@
+{
+  "version": "v2",
+  "credit_score": {
+    "numerical_impute": {
+      "age": 40,
+      "income": 60000,
+      "loanAmount": 20000,
+      "loanRate": 10,
+      "existingDebtPayment": 500
+    },
+    "categorical_mapping": {
+      "loanPurpose": {
+        "Business": 0,
+        "Home": 1,
+        "Education": 2,
+        "Other": 3,
+        "Others": 3,
+        "Auto": 4,
+        "Automobile": 4
+      }
+    },
+    "scaler": {
+      "features": [
+        "Income",
+        "LoanAmount",
+        "InterestRate",
+        "DTIRatio"
+      ],
+      "mean": {
+        "Income": 82506.22797965507,
+        "LoanAmount": 127547.49639460145,
+        "InterestRate": 13.48814736852411,
+        "DTIRatio": 0.5005789198000754
+      },
+      "std": {
+        "Income": 38952.00803254213,
+        "LoanAmount": 70854.8913169391,
+        "InterestRate": 6.636043789004597,
+        "DTIRatio": 0.2309132236951819
+      }
+    },
+    "target_is_scaled": false
+  },
+  "default_pd": {
+    "numerical_impute": {
+      "age": 40,
+      "income": 60000,
+      "loanAmount": 20000,
+      "loanRate": 10,
+      "loanTerm": 36,
+      "existingDebtPayment": 500,
+      "creditScore": 650
+    },
+    "categorical_mapping": {
+      "loanPurpose": {
+        "Business": 0,
+        "Home": 1,
+        "Education": 2,
+        "Other": 3,
+        "Others": 3,
+        "Auto": 4,
+        "Automobile": 4
+      }
+    },
+    "feature_order": [
+      "Age",
+      "Income",
+      "LoanAmount",
+      "InterestRate",
+      "LoanTerm",
+      "DTIRatio",
+      "HasMortgage",
+      "HasDependents",
+      "LoanPurpose"
+    ],
+    "algorithm": "lightgbm",
+    "decision_threshold": 0.17
+  }
+}

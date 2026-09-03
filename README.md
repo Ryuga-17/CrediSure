@@ -1,183 +1,117 @@
 # CrediSure - Credit Risk Analyzer
 
-A production-grade credit risk assessment system for loan default prediction, designed with practices used in reinsurance and financial risk teams.
+CrediSure is a credit risk assessment system for loan default prediction. It evaluates applicant risk profiles by calculating a normalized credit score and a Probability of Default (PD), segmenting applicants into business-friendly risk buckets. 
 
-## Business Problem
+This repository contains both the operational application (Frontend + Backend) and the machine learning development pipelines.
 
-Lenders need consistent, explainable decisions for credit risk. This system predicts a normalized credit score and probability of default (PD), segments applicants into business-friendly risk buckets, and logs monitoring metrics to detect drift in production.
+## 🏗 System Architecture
 
-## System Architecture
+The project is structured into several core components:
 
-```mermaid
-graph TD
-  subgraph Data Management & Training
-    A[(MongoDB \n Production Data)] --> |Extract/Batch| B[DVC \n Data Versioning]
-    B --> V[Data Validation \n Great Expectations]
-    V --> C[Feature Engineering \n & Preprocessing]
-    C --> FS[(Lightweight \n Feature Store)]
-    FS --> D[Model Training \n LightGBM/PyTorch]
-    D --> E[Optuna \n Hyperparameter Tuning]
-    E --> F[MLflow \n Exp Tracking]
-  end
+### 1. Frontend (`my-app/`)
+- **Tech Stack**: Next.js 16, React 19, Tailwind CSS 4, Framer Motion, Three.js
+- **Features**: A modern, interactive dashboard for reviewing applicant profiles and credit risk metrics. Includes a chatbot interface (currently in development) intended for querying risk explanations.
 
-  subgraph Registry & CI/CD
-    F --> G[MLflow Model Registry]
-    G --> |Automated Eval \n AUC impr v. > 1-2%| H{GitHub Actions \n CI/CD}
-    H --> |Build & Push| I[Docker Registry]
-  end
+### 2. Backend API (`Backend/`)
+- **Tech Stack**: Node.js, Express, MongoDB (Mongoose), JWT
+- **Features**: 
+  - Handles HTTP traffic, user authentication (JWT via httpOnly cookies + CSRF protection), and secures endpoints.
+  - Calls the persistent FastAPI inference service (`ml_service/`) over HTTP via `mlService.js` to run predictions.
+  - Logs predictions and monitoring metrics via `monitoringService.js`.
 
-  subgraph Production Deployment
-    I --> J[Production \n Inference Service]
-    I --> J2[Canary \n Inference Service]
-    K[Next.js Frontend] --> L[Node.js Express API]
-    L --> |Traffic Routing / REST| J & J2
-    J & J2 --> |JSON Structured \n Traceability Logs| M[Prometheus/Logging]
-    M --> N[Grafana \n Dashboards]
-    N -.-> |Drift & Perf Alerts| A
-  end
-```
+### 3. Machine Learning Inference (`ml_service/`, logic in `Backend/src/services/mlPredictor.py`)
+- **Tech Stack**: Python, FastAPI, LightGBM, SHAP
+- **Features**: 
+  - `ml_service/main.py` is a persistent FastAPI service (`POST /api/v1/predict`) that preloads both models once at startup, instead of spawning a fresh Python process per request.
+  - It imports `mlPredictor.py` directly for the actual preprocessing/model/SHAP logic, so there is one copy of that logic regardless of how it's invoked.
+  - **Two-stage pipeline**: Predicts a credit score and a probability of default.
+  - **Explainability**: Computes exact SHAP values (`TreeExplainer`) for both models to extract the top drivers of default risk for each applicant, returning a concise summary for the frontend.
+  - Uses `preprocessing_v1.json` (credit score) / `preprocessing_v2.json` (default PD) and saved model artifacts from the `models/` directory.
 
-## Modeling Approach
+### 4. ML Pipeline & Data (`ml_pipeline/` & `notebooks/`)
+- Contains the Jupyter notebooks and scripts used for training the ML models.
+- **Note**: The training dataset (`Loan_default.csv`) is `.gitignore`d due to size (25MB) and must be downloaded separately: [`nikhil1e9/loan-default`](https://www.kaggle.com/datasets/nikhil1e9/loan-default) on Kaggle, placed at `notebooks/Loan_default.csv`.
 
-- **Two-stage pipeline**
-  - Stage 1: Credit score model produces a normalized score (300–850).
-  - Stage 2: Default PD model uses the credit score as an explicit feature.
-- **Reusable preprocessing**
-  - Missing value handling
-  - Numerical scaling using versioned artifacts
-  - Categorical encoding via stable mappings
-- **Artifacts** live in `ml_artifacts/` and are versioned for repeatability.
- - **Stateless inference** loads models once at startup and reuses them for thread-safe scoring.
+### 5. Chatbot / RAG Service (`rag_service/`)
+- **Tech Stack**: Python, FastAPI, LangChain, HuggingFace sentence-transformers (embeddings), Chroma (vector store), Groq (`ChatGroq`, generation).
+- **Features**: `POST /explain` answers finance/CrediSure questions grounded in `rag_service/knowledge/*.md` (credit score, PD, DTI ratio, SHAP explanations, loan terms, risk buckets) -- retrieval-augmented, not a raw LLM call, so answers stay scoped to what CrediSure actually does. Powers the chatbot on the frontend's `/guide` page (`my-app/src/components/Chatbot.tsx`).
+- Builds its vector store from the knowledge docs fresh at startup (the corpus is small, so there's no persisted index to go stale).
+- Rate-limited (20 req/15min per IP by default) and has a 30s LLM request timeout -- this endpoint has no auth in front of it (`NEXT_PUBLIC_CHAT_API_URL` is visible in the browser bundle), so both matter.
 
-## Explainability Approach
-
-- SHAP values are computed for the PD model.
-- Top 5 drivers are stored with each prediction in MongoDB.
-- API returns a concise explanation summary for UI display.
-
-## MLOps Features
-
-This system utilizes a fully automated MLOps pipeline ensuring reproducibility and consistency:
-- **DVC (Data Version Control)**: Orchestrates data extraction, validation, and preprocessing pipelines, preventing Git bloat while enabling total reproducibility.
-- **Great Expectations**: Data validation layer enforcing schema, range, and type consistency before training.
-- **Lightweight Feature Store**: Parquet-based store centralizing feature definitions for training and online serving.
-- **MLflow & Optuna**: Automated bayesian hyperparameter tuning and model experiment tracking. Uses the MLflow Registry for managing staging and production models.
-
-## Monitoring Strategy
-
-- **Structured Traceability**: Every prediction logs `input_features`, `model_version`, and `output_prediction` in JSON format.
-- **Comprehensive Drift Detection**: 
-  - *Input Drift*: Tracked via Population Stability Index (PSI).
-  - *Prediction Drift*: Output distribution monitoring.
-  - *Performance Drift*: Continuous calculation of decay using delayed labels.
-- **Grafana & Prometheus**: Real-time alerting when thresholds are breached.
-
-## Safe Deployment (Canary Releases)
-
-- **CI/CD via GitHub Actions**: Linting, testing, and Docker container builds on merge.
-- **Automated Promotion**: Models promote from staging only if AUC improves by ≥ 1.5% without business logic degradation.
-- **Canary Routing**: Model is safely deployed to 5-10% of traffic. Upon stable inference, traffic seamlessly shifts to 100%.
-
-## API Output (Core Fields)
-
-- `creditScore`
-- `defaultProbability`
-- `riskBucket` (Low / Medium / High)
-- `explanationSummary`
-- `credit_score`
-- `probability_of_default`
-- `risk_bucket`
-- `explanation_summary`
-
-## Request/Response Schema Notes
-
-- Requests are validated against required loan fields before inference.
-- Responses include both camelCase and snake_case keys for backward compatibility.
-- Model and preprocessing versions are returned for traceability.
-
-## Tech Stack
-
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
-- **Backend API**: Node.js, Express, MongoDB
-- **Inference Service**: Python, FastAPI, MLflow Pyfunc
-- **MLOps Platform**: DVC, Great Expectations, MLflow, Optuna
-- **Monitoring**: Prometheus, Grafana
-
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
-
-- Node.js 18+
+- Node.js 20+ (Node 26 is not supported due to dependency incompatibilities)
 - Python 3.9+
 - MongoDB (Atlas or local)
-- Docker & Docker Compose (for MLOps & Monitoring Services)
+- A [Groq API key](https://console.groq.com/keys) (free tier works) for the chatbot
 
-### Installation
+### 1. ML Inference Service Setup
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r Backend/requirements.txt -r ml_service/requirements.txt
+OMP_NUM_THREADS=1 .venv/bin/uvicorn ml_service.main:app --port 8000
+```
+*The Backend calls this service over HTTP (`ML_SERVICE_URL`, defaults to `http://localhost:8000`) for every prediction, so it must be running before you submit a loan application.*
 
-1. **Spin up MLOps Services & Inference**
-   ```bash
-   # (Assuming docker-compose orchestrates mlflow, prometheus, grafana, and inference)
-   docker compose up -d
-   ```
-
-2. **Backend Setup**
-   ```bash
-   cd Backend
-   npm install
-   npm run dev
-   ```
-
-3. **Frontend Setup**
-   ```bash
-   cd my-app
-   npm install
-   npm run dev
-   ```
-
-4. **Environment Variables**
-
-   Create `Backend/.env`:
-   ```env
-   MONGO_URI=your-mongodb-connection-string
-   JWT_SECRET=your-jwt-secret-key
-   PORT=5000
-   INFERENCE_API_URL=http://localhost:8000
-   ```
-
-   Create `my-app/.env.local`:
-   ```env
-   NEXT_PUBLIC_API_URL=http://localhost:5000
-   ```
-
-5. **Run Training Pipeline (Optional)**
-   ```bash
-   cd ml_pipeline
-   dvc repro
-   ```
-
-## Project Structure
-
-```text
-CreditSure/
-├── Backend/                     # Node.js/Express API server
-├── my-app/                      # Next.js frontend
-├── ml_pipeline/                 # MLOps Pipeline Hub (DVC, Optuna, Training)
-│   ├── data/                    # Version-controlled data & Feature Store
-│   ├── src/                     # Python training & validation modules
-│   └── dvc.yaml                 # DVC pipeline stages
-├── ml_service/                  # Python FastAPI Inference Microservice
-│   ├── app.py                   # MLflow pyfunc model serving
-│   └── Dockerfile               
-├── monitoring/                  # Prometheus configs and Grafana Dashboards
-└── .github/workflows/           # CI/CD pipelines (mlops.yml)
+### 2. Backend Setup
+```bash
+cd Backend
+npm install
+# Create a .env file (see below)
+npm run dev
 ```
 
-## Future Improvements
+### 3. Frontend Setup
+```bash
+cd my-app
+npm install
+# Create a .env.local file (see below)
+npm run dev
+```
 
-- Introduce fairness and bias checks on protected attributes.
-- Add calibration and rejection-inference strategies.
-- Expand Great Expectations coverage across upstream database tables.
+### 4. Chatbot / RAG Service Setup
+```bash
+cd rag_service
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+cp .env.example .env
+# Edit .env and set GROQ_API_KEY
+.venv/bin/uvicorn app:app --port 8001
+```
+*Kept in its own venv, separate from the main `.venv` -- `sentence-transformers` pulls in its own (large) `torch` dependency unrelated to the LightGBM scoring path. The frontend calls this over HTTP (`NEXT_PUBLIC_CHAT_API_URL`, see below), so it must be running before the chatbot on `/guide` will respond.*
 
-## License
+### 5. Environment Variables
 
+**Backend (`Backend/.env`)**:
+```env
+MONGO_URI=your-mongodb-connection-string
+JWT_SECRET=your-jwt-secret-key
+PORT=5000
+ML_SERVICE_URL=http://localhost:8000
+# Comma-separated allowlist for credentialed cross-origin requests; defaults
+# to http://localhost:3000 if unset.
+CORS_ORIGIN=http://localhost:3000
+# Express "trust proxy" hop count, for correct req.ip behind a reverse proxy/
+# load balancer (affects rateLimit.js's per-IP buckets). Defaults to 1 when
+# NODE_ENV=production, 0 otherwise -- only set this explicitly if your deploy
+# topology has more than one proxy hop in front of the backend.
+# TRUST_PROXY=1
+```
+
+**Frontend (`my-app/.env.local`)**:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_CHAT_API_URL=http://localhost:8001
+```
+
+**Chatbot / RAG service (`rag_service/.env`)**: see `rag_service/.env.example` -- requires `GROQ_API_KEY`, everything else has a default.
+
+## ⚠️ Current Status & Known Limitations
+Please refer to `TODO.md` for a complete snapshot of outstanding work. Key limitations currently include:
+- The credit-score model (v1) still has no real signal in its training data (R² ≈ -0.0001 on corrected evaluation) -- it returns a number, not yet a reliable one. Blocked on sourcing a dataset where score is genuinely derived from applicant data.
+- MLOps features like DVC, Great Expectations, and automated CI/CD canary deployments are aspirational goals and are not fully wired into the current production flow.
+- `models/` (the trained model artifacts) is not yet committed to git -- see `TODO.md`.
+
+## 📄 License
 MIT

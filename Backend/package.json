@@ -3,9 +3,15 @@
   "version": "1.0.0",
   "description": "Backend for CrediSure",
   "main": "index.js",
+  "engines": {
+    "comment": "Node 26 removed buffer.SlowBuffer, which jsonwebtoken depends on via jwa -> buffer-equal-constant-time. The server cannot start on Node >= 26.",
+    "node": ">=20 <26"
+  },
   "scripts": {
     "dev": "node src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm run test:node && npm run test:py",
+    "test:node": "node --test",
+    "test:py": "OMP_NUM_THREADS=1 ../.venv/bin/python -m pytest tests -v"
   },
   "keywords": [
     "backend",
@@ -15,20 +21,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sentry/node": "^10.70.0",
+    "@sentry/profiling-node": "^10.70.0",
+    "axios": "^1.20.0",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-validator": "^7.2.1",
-    "framer-motion": "^12.6.2",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.13.1",
     "morgan": "^1.10.0",
-    "nodemailer": "^6.10.0",
-    "pdfkit": "^0.16.0",
-    "python-shell": "^5.0.0",
-    "twilio": "^5.5.1"
+    "multer": "^2.3.0",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1"
   }
 }

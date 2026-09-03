@@ -16,9 +16,12 @@ const loanRequestSchema = checkSchema({
   },
   income: {
     in: ["body"],
-    isFloat: { options: { min: 0 } },
+    // Must be strictly > 0: the scoring pipeline divides by income
+    // (LoanAmount/Income feature engineering), so 0 or negative values
+    // produce an undefined result rather than a real score. See CRIT-2.
+    isFloat: { options: { min: 0.01 } },
     toFloat: true,
-    errorMessage: "Income must be a positive number"
+    errorMessage: "Income must be greater than 0"
   },
   existingDebtPayment: {
     in: ["body"],
@@ -63,19 +66,43 @@ const loanRequestSchema = checkSchema({
     optional: true,
     isBoolean: true,
     toBoolean: true
+  },
+  numBankAccounts: {
+    in: ["body"],
+    optional: true,
+    isInt: { options: { min: 0 } },
+    toInt: true
+  },
+  numCreditCards: {
+    in: ["body"],
+    optional: true,
+    isInt: { options: { min: 0 } },
+    toInt: true
+  },
+  numOfDelayedPayment: {
+    in: ["body"],
+    optional: true,
+    isInt: { options: { min: 0 } },
+    toInt: true
+  },
+  creditMix: {
+    in: ["body"],
+    optional: true,
+    isString: true,
+    trim: true
   }
 });
 
 module.exports = {
   loanRequestSchema,
   predictionResponseSchema: {
-    creditScore: "number",
+    creditScore: "string",
     defaultProbability: "number",
     riskBucket: "string",
     explanationSummary: "array",
     preprocessingVersion: "string",
     modelVersions: "object",
-    credit_score: "number",
+    credit_score: "string",
     probability_of_default: "number",
     risk_bucket: "string",
     explanation_summary: "array"

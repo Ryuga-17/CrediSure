@@ -1,0 +1,17 @@
+# This service imports Backend/src/services/mlPredictor.py directly (see
+# main.py), so it must run in the SAME virtualenv as the Backend --
+# Backend/requirements.txt already pins numpy/pandas/scikit-learn/lightgbm/
+# joblib/shap to the versions verified against the shipped model artifacts.
+# Install both files into one venv:
+#
+#   python3 -m venv .venv
+#   .venv/bin/pip install -r Backend/requirements.txt -r ml_service/requirements.txt
+#
+# Run with (from the project root, same venv, OMP_NUM_THREADS=1 for the same
+# reason mlService.js sets it -- LightGBM's bundled OpenMP runtime):
+#
+#   OMP_NUM_THREADS=1 .venv/bin/uvicorn ml_service.main:app --port 8000
+#
+# Only the two packages below are additive on top of Backend/requirements.txt.
+fastapi==0.141.1
+uvicorn==0.52.3

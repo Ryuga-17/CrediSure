@@ -2,7 +2,9 @@ const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
+  // lowercase+trim so "User@x.com" and "user@x.com " aren't treated as
+  // different accounts (the unique index is case-sensitive without this).
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true },
   role: { type: String, enum: ["user", "admin"], default: "user" },
 }, { timestamps: true });
